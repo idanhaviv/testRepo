@@ -1,0 +1,57 @@
+#!/bin/sh
+# merge one repo with another
+# http://www.kernel.org/pub/software/scm/git/docs/howto/using-merge-subtree.html
+
+# Check arguments
+if [ $# -ne 0 ]; then
+    echo 1>&2 Usage:
+	echo 1>&2 "  checkout the branch you want to merge develop into"
+	echo 1>&2 "  $0"
+    exit 127
+fi
+
+# Check for untracked files
+git ls-files --others --error-unmatch . >/dev/null 2>&1; ec=$?
+
+if test "$ec" = 0; then
+    echo There are some untracked files, stash or commit them before running this command
+    exit 127
+elif test "$ec" = 1; then
+    echo no untracked files
+else
+    echo error from git ls-files
+    exit $ec
+fi
+
+# Check for staged but uncommitted files
+
+git diff-index --quiet --cached HEAD >/dev/null 2>&1; ec=$?
+
+if test "$ec" = 0; then
+    echo There are some uncommitted files, stash or commit them before running this command
+    exit 127
+elif test "$ec" = 1; then
+    echo no uncommited files in the index
+else
+    echo error from git diff-index
+    exit $ec
+fi
+
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+echo current_branch=$current_branch
+
+if [ $current_branch = "develop" ]; then
+    echo 1>&2 Currently on develop branch, cd to the branch you want to merge develop in to
+    exit 127
+fi
+
+git checkout develop
+
+# checked_out_branch=$(git rev-parse --abbrev-ref HEAD)
+# echo checked out $checked_out_branch
+
+git pull
+
+
+# git checkout $current_branch
+# git merge develop
